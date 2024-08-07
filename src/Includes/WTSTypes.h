@@ -208,6 +208,14 @@ typedef enum tagDirectionType
 	WDT_NET						//净
 } WTSDirectionType;
 
+//template <> struct fmt::formatter<WTSDirectionType> : formatter<string_view> {
+//	auto format (WTSDirectionTypet, format_context& ctx) const 
+//		-> format_context::iterator {
+//			  string_view v = std::to_string(static_cast<int>(t));
+//			  return formatter<string_view>::format(v, ctx);
+//		}
+//};
+
 /*
  *	业务类型
  */
