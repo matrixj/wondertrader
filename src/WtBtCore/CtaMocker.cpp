@@ -11,6 +11,7 @@
 #include "WtHelper.h"
 #include "EventNotifier.h"
 
+#include <algorithm>
 #include <exception>
 #include <boost/filesystem.hpp>
 
@@ -962,8 +963,12 @@ void CtaMocker::on_init()
 {
 	_ticks.clear();
 	_in_backtest = true;
-	if (_strategy)
+	if (_strategy) {
 		_strategy->on_init(this);
+	} else {
+		WTSLogger::error("CTA Strategy initialized failed");
+		return;
+	}
 
 	WTSLogger::info("CTA Strategy initialized with {} slippage: {}", _ratio_slippage?"ratio":"absolute", _slippage);
 }
@@ -1305,7 +1310,9 @@ void CtaMocker::stra_enter_long(const char* stdCode, double qty, const char* use
 	WTSCommodityInfo* commInfo = _replayer->get_commodity_info(stdCode);
 	if(commInfo == NULL)
 	{
-		log_error("Cannot find corresponding commodity info of {}", stdCode);
+		log_error("1 Cannot find corresponding commodity info of {}", stdCode);
+		printf("2 Cannot find corresponding commodity info of %s\n", stdCode);
+
 		return;
 	}
 
@@ -1350,7 +1357,7 @@ void CtaMocker::stra_enter_short(const char* stdCode, double qty, const char* us
 	WTSCommodityInfo* commInfo = _replayer->get_commodity_info(stdCode);
 	if (commInfo == NULL)
 	{
-		log_error("Cannot find corresponding commodity info of {}", stdCode);
+		log_error("2 Cannot find corresponding commodity info of {}", stdCode);
 		return;
 	}
 
@@ -1402,7 +1409,7 @@ void CtaMocker::stra_exit_long(const char* stdCode, double qty, const char* user
 	WTSCommodityInfo* commInfo = _replayer->get_commodity_info(stdCode);
 	if (commInfo == NULL)
 	{
-		log_error("Cannot find corresponding commodity info of {}", stdCode);
+		log_error("3 Cannot find corresponding commodity info of {}", stdCode);
 		return;
 	}
 
@@ -1453,7 +1460,7 @@ void CtaMocker::stra_exit_short(const char* stdCode, double qty, const char* use
 	WTSCommodityInfo* commInfo = _replayer->get_commodity_info(stdCode);
 	if (commInfo == NULL)
 	{
-		log_error("Cannot find corresponding commodity info of {}", stdCode);
+		log_error("4 Cannot find corresponding commodity info of {}", stdCode);
 		return;
 	}
 
@@ -1520,7 +1527,7 @@ void CtaMocker::stra_set_position(const char* stdCode, double qty, const char* u
 	WTSCommodityInfo* commInfo = _replayer->get_commodity_info(stdCode);
 	if (commInfo == NULL)
 	{
-		log_error("Cannot find corresponding commodity info of {}", stdCode);
+		log_error("5 Cannot find corresponding commodity info of {}", stdCode);
 		return;
 	}
 
@@ -1799,6 +1806,9 @@ WTSKlineSlice* CtaMocker::stra_get_bars(const char* stdCode, const char* period,
 	}
 
 	WTSKlineSlice* kline = _replayer->get_kline_slice(stdCode, basePeriod, count, times, isMain);
+	if (kline == nullptr) {
+		printf("get_kline_slice nullptr\n");
+	} 
 
 	KlineTag& tag = _kline_tags[key];
 	tag._closed = false;
@@ -2160,9 +2170,10 @@ void CtaMocker::add_chart_mark(double price, const char* icon, const char* tag)
 
 void CtaMocker::register_index(const char* idxName, uint32_t indexType)
 {
-	ChartIndex& cIndex = _chart_indice[idxName];
-	cIndex._name = idxName;
-	cIndex._indexType = indexType;
+  WTSLogger::info("Index {} registered", idxName);
+  ChartIndex &cIndex = _chart_indice[idxName];
+  cIndex._name = idxName;
+  cIndex._indexType = indexType;
 }
 
 bool CtaMocker::register_index_line(const char* idxName, const char* lineName, uint32_t lineType)
@@ -2170,7 +2181,7 @@ bool CtaMocker::register_index_line(const char* idxName, const char* lineName, u
 	auto it = _chart_indice.find(idxName);
 	if (it == _chart_indice.end())
 	{
-		WTSLogger::error("Index {} not registered", idxName);
+		WTSLogger::error("1 Index {} not registered", idxName);
 		return false;
 	}
 
@@ -2186,7 +2197,7 @@ bool CtaMocker::add_index_baseline(const char* idxName, const char* lineName, do
 	auto it = _chart_indice.find(idxName);
 	if (it == _chart_indice.end())
 	{
-		WTSLogger::error("Index {} not registered", idxName);
+		WTSLogger::error("2 Index {} not registered", idxName);
 		return false;
 	}
 
@@ -2206,7 +2217,10 @@ bool CtaMocker::set_index_value(const char* idxName, const char* lineName, doubl
 	auto ait = _chart_indice.find(idxName);
 	if (ait == _chart_indice.end())
 	{
-		WTSLogger::error("Index {} not registered", idxName);
+		WTSLogger::error("3 Index {} not registered", idxName);
+		for(auto& it : _chart_indice) {
+			WTSLogger::error("Index {} registered", it.first);
+		}
 		return false;
 	}
 

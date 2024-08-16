@@ -1496,6 +1496,7 @@ bool WtDataWriter::updateCache(WTSContractInfo* ct, WTSTickData* curTick, uint32
 		//如果缓存里的数据日期大于最新行情的日期
 		//或者缓存里的时间大于等于最新行情的时间,数据就不需要处理
 		WTSSessionInfo* sInfo = ct->getCommInfo()->getSessionInfo();
+		assert(sInfo);
 		uint32_t tdate = sInfo->getOffsetDate(curTick->actiondate(), curTick->actiontime() / 100000);
 		if (tdate > curTick->tradingdate())
 		{

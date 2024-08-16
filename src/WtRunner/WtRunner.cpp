@@ -276,9 +276,9 @@ bool WtRunner::config(const std::string& filename)
 	}
 
 	if (!_is_hft)
-		initCtaStrategies();
+		return initCtaStrategies();
 	else
-		initHftStrategies();
+		return initHftStrategies();
 	
 	return true;
 }

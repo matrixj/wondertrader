@@ -52,7 +52,12 @@ bool WtStraDualThrust::init(WTSVariant* cfg)
 
 void WtStraDualThrust::on_session_begin(ICtaStraCtx* ctx, uint32_t uTDate)
 {
+	if (_isstk) {
+		_moncode = _code;
+		return;
+	}
 	std::string newMonCode = ctx->stra_get_rawcode(_code.c_str());
+	ctx->stra_log_info(fmt::format("_code {} newMonCode {} _moncode {}", _code, newMonCode, _moncode).c_str());
 	if(newMonCode!=_moncode)
 	{
 		if(!_moncode.empty())
@@ -78,11 +83,13 @@ void WtStraDualThrust::on_schedule(ICtaStraCtx* ctx, uint32_t curDate, uint32_t 
 	if(kline == NULL)
 	{
 		//这里可以输出一些日志
+		printf("get kline error\n");
 		return;
 	}
 
 	if (kline->size() == 0)
 	{
+		printf("get kline size 0\n");
 		kline->release();
 		return;
 	}
@@ -119,6 +126,7 @@ void WtStraDualThrust::on_schedule(ICtaStraCtx* ctx, uint32_t curDate, uint32_t 
 	{
 		if(curPx >= upper_bound)
 		{
+			assert(_moncode.size() > 0);
 			ctx->stra_enter_long(_moncode.c_str(), 2 * trdUnit, "DT_EnterLong");
 			//向上突破
 			ctx->stra_log_info(fmt::format("向上突破{}>={},多仓进场", curPx, upper_bound).c_str());
@@ -175,16 +183,20 @@ void WtStraDualThrust::on_init(ICtaStraCtx* ctx)
 	if (kline == NULL)
 	{
 		//这里可以输出一些日志
-		return;
+		printf("ERROR get kline code %s\n", code.c_str());
+	//	return;
+	} else {
+		printf("get kline code success%s\n", code.c_str());
+                kline->release();
 	}
 
-	kline->release();
 
 	//注册指标和图表K线
 	ctx->set_chart_kline(_code.c_str(), _period.c_str());
 
 	//注册指标
 	ctx->register_index("DualThrust", 0);
+	printf("regist on index DualThrust\n");
 
 	//注册指标线
 	ctx->register_index_line("DualThrust", "upper_bound", 0);

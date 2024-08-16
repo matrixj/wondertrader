@@ -83,7 +83,10 @@ int main(int argc, char* argv[])
 	if (strcmp(mode, "cta") == 0)
 	{
 		CtaMocker* mocker = new CtaMocker(&replayer, "cta", slippage);
-		mocker->init_cta_factory(cfg->get("cta"));
+		if (!mocker->init_cta_factory(cfg->get("cta"))) {
+			WTSLogger::info("Init library {} failed", cfg->get("cta")->get("module")->asCString());
+			return -1;
+		}
 		const char* stra_id = cfg->get("cta")->get("strategy")->getCString("id");
 		// 加载增量回测的基础历史回测数据
 		const char* incremental_backtest_base = cfg->get("env")->getCString("incremental_backtest_base");

@@ -157,8 +157,10 @@ bool TraderAdapter::init(const char* id, WTSVariant* params, IBaseDataMgr* bdMgr
 		WTSLogger::log_dyn("trader", _id.c_str(), LL_WARN, "[{}] No risk control rule setup of trading channel", _id.c_str());
 	}
 
-	if (params->getString("module").empty())
+	if (params->getString("module").empty()) {
+		WTSLogger::error("trader module configure item missing");
 		return false;
+	}
 
 	std::string module = DLLHelper::wrap_module(params->getCString("module"), "lib");;
 
@@ -403,8 +405,11 @@ bool TraderAdapter::run()
 	if (_trader_api == NULL)
 		return false;
 
-	if (_stat_map == NULL)
+	if (_stat_map == NULL) {
 		_stat_map = TradeStatMap::create();
+		assert(_stat_map);
+		printf("create not null _stat_map\n");
+	}
 
 	_trader_api->registerSpi(this);
 
@@ -610,6 +615,7 @@ bool TraderAdapter::checkOrderLimits(const char* stdCode)
 	if (riskPara == NULL)
 		return true;
 
+	assert(_stat_map);
 	WTSTradeStateInfo* statInfo = (WTSTradeStateInfo*)_stat_map->get(stdCode);
 	if (statInfo && riskPara->_order_total_limits != 0 && statInfo->total_orders() >= riskPara->_order_total_limits)
 	{
@@ -959,6 +965,7 @@ OrderIDs TraderAdapter::sell(const char* stdCode, double price, double qty, int 
 	}
 
 	if (cInfo == NULL) cInfo = getContract(stdCode);
+	assert(cInfo);
 	WTSCommodityInfo* commInfo = cInfo->getCommInfo();
 	WTSSessionInfo* sInfo = commInfo->getSessionInfo();
 
@@ -1335,6 +1342,7 @@ uint32_t TraderAdapter::openLong(const char* stdCode, double price, double qty, 
 
 	uint32_t ret = doEntrust(entrust);
 	entrust->release();
+	printf("------------------------qty :%f\n", qty);
 	return ret;
 }
 
@@ -2316,6 +2324,7 @@ void TraderAdapterMgr::run()
 	for (auto it = _adapters.begin(); it != _adapters.end(); it++)
 	{
 		it->second->run();
+		WTSLogger::info("trading channels {} started", it->first);
 	}
 
 	WTSLogger::info("{} trading channels started", _adapters.size());

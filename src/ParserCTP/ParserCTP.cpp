@@ -121,6 +121,7 @@ bool ParserCTP::init(WTSVariant* config)
 
 	std::string dllpath = getBinDir() + DLLHelper::wrap_module(module.c_str(), "");
 	m_hInstCTP = DLLHelper::load_library(dllpath.c_str());
+	printf("load dll %s handle %p\n", dllpath.c_str(), m_hInstCTP);
 	std::string path = StrUtil::printf("%s%s/%s/", m_strFlowDir.c_str(), m_strBroker.c_str(), m_strUserID.c_str());
 	if (!StdFile::exists(path.c_str()))
 	{
@@ -138,6 +139,7 @@ bool ParserCTP::init(WTSVariant* config)
 	m_funcCreator = (CTPCreator)DLLHelper::get_symbol(m_hInstCTP, creatorName);
 	m_pUserAPI = m_funcCreator(path.c_str(), false, false);
 	m_pUserAPI->RegisterSpi(this);
+	printf("load dll %s m_funcCreator %p m_pUserAPI %p\n", dllpath.c_str(), m_funcCreator, m_pUserAPI);
 	m_pUserAPI->RegisterFront((char*)m_strFrontAddr.c_str());
 
 	return true;
@@ -196,7 +198,7 @@ void ParserCTP::OnRspUserLogin( CThostFtdcRspUserLoginField *pRspUserLogin, CTho
         if(m_uTradingDate == 0)
             m_uTradingDate = TimeUtils::getCurDate();
 		
-		write_log(m_sink, LL_INFO, "[ParserCTP] Market data server logined, {}", m_uTradingDate);
+		write_log(m_sink, LL_INFO, "[ParserCTP] Market data server logined xxxxxx, {}", m_uTradingDate);
 
 		if(m_sink)
 		{
@@ -232,10 +234,12 @@ void ParserCTP::OnRspUnSubMarketData( CThostFtdcSpecificInstrumentField *pSpecif
 
 void ParserCTP::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMarketData )
 {	
+	printf("1 reecpt ....\n");
 	if(m_pBaseDataMgr == NULL)
 	{
 		return;
 	}
+	printf("1 reecpt ....%s\n", pDepthMarketData->InstrumentID);
 
     WTSContractInfo* contract = m_pBaseDataMgr->getContract(pDepthMarketData->InstrumentID, pDepthMarketData->ExchangeID);
     if (contract == NULL)
@@ -352,6 +356,7 @@ void ParserCTP::OnRtnDepthMarketData( CThostFtdcDepthMarketDataField *pDepthMark
 
 void ParserCTP::OnRspSubMarketData( CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast )
 {
+	printf("1 reecpt ....\n");
 	if(!IsErrorRspInfo(pRspInfo))
 	{
 
@@ -428,6 +433,7 @@ void ParserCTP::DoSubscribeMD()
 
 bool ParserCTP::IsErrorRspInfo(CThostFtdcRspInfoField *pRspInfo)
 {
+	printf("3 reecpt ....%d %s\n",pRspInfo->ErrorID,  pRspInfo->ErrorMsg);
 	return false;
 }
 
